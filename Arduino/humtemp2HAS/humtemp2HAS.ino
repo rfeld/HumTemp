@@ -1,5 +1,5 @@
 /*
- * HumTemp2Raspi - Collect Humidity and Temperature measurements and push them to the Home Automation Server
+ * HumTemp2HAS - Collect Humidity and Temperature measurements and push them to the Home Automation Server
  *
  * This code was started on March the 5th 2016.
  *
@@ -54,8 +54,12 @@ void loop() {
   }
 
   Serial.println("Connected to HAS...");
+
+  // Dummy Message: 
+  String message = "*MyHomeProto;HumTemp;Schlafzimmer;450;2100;END#";
+
+  //ToDo: Auslesen der Sensoren und Versenden der Nachrichten
   
-  String message = "*MyHomeProto;HumTemp;450;2100;END#";
   if(client.print(message) != message.length())
   {
     Serial.println("Es wurden nicht alle Bytes gesendet!");
