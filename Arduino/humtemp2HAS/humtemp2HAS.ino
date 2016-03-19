@@ -19,7 +19,12 @@
 #include <EthernetServer.h>
 #include <EthernetUdp.h>
 #include <SPI.h>
+#include "DHT.h"
 
+#define DHTPIN 2     // what pin we're connected to
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+
+#define SENSOR_ID "Schlafzimmer"
 
 // MAC Address for Ethernetshield
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -27,6 +32,8 @@ byte my_ip[] = { 199, 168, 222, 18 }; // google will tell you: "public ip addres
 byte HAS_ip[] = { 192, 168, 178, 28 }; // IP Adress of the Home Automation Server
 
 EthernetClient client;
+
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
 
@@ -45,21 +52,52 @@ void setup() {
 }
 
 void loop() {
+
+  // Read Temperature Values
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+Serial.print("Humidity: ");
+  Serial.print(h);
+  Serial.print(" %\t");
+  Serial.print("Temperature: ");
+  Serial.print(t);
+  Serial.print(" *C ");
+
+  String Start( "*MyHomeProto;HumTemp;" );
+  String End(";END#");
+
+  String Sensor_ID( SENSOR_ID );
+
+  String Hum(  h *  10, 0 );
+  String Temp( t * 100, 0 );
+
+  String message = Start + Sensor_ID + ";" + Hum + ";" + Temp + End;
+  
+  int maxAttempts = 3;
+  
   // Try establishing a connection to the HAS
   //while(client.connect(HAS_ip, 12000) != 1)
   while(client.connect("raspberrypi2.fritz.box", 12000) != 1)
   {
     Serial.println("Error connecting to HAS! Next attempt in 5s");
     delay(5000);
+    maxAttempts--;
+    if(maxAttempts==0)
+      break;
   }
 
   Serial.println("Connected to HAS...");
 
   // Dummy Message: 
-  String message = "*MyHomeProto;HumTemp;Schlafzimmer;450;2100;END#";
+  //String message = "*MyHomeProto;HumTemp;Schlafzimmer;450;2100;END#";
 
-  //ToDo: Auslesen der Sensoren und Versenden der Nachrichten
-  
   if(client.print(message) != message.length())
   {
     Serial.println("Es wurden nicht alle Bytes gesendet!");
