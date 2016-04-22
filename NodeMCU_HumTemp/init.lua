@@ -37,5 +37,8 @@ tmr.alarm(0, 1000, 1, function()
    end
 end)
 
+-- Start main function with 5s delay
+print("\n--- Starting Main in 5s ---\n")
+tmr.alarm(6, 5000,tmr.ALARM_SINGLE, function() dofile("main.lua") end)
 
 
